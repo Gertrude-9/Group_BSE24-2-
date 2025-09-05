@@ -96,7 +96,7 @@ To run the backend locally, ensure you have the following installed:
 1.  **Clone the Repository**
     Clone the project from GitHub and navigate to the backend directory:
     ```bash
-    git clone [https://github.com/Gertrude-9/bse_ci_cd.git](https://github.com/Gertrude-9/bse_ci_cd.git)
+    git clone [https://github.com/Gertrude-9/bse_ci_cd.git](https://github.com/Gertrude-9/Group_BSE24-2.git)
     cd team_blog_backend
     ```
 2.  **Set Up Virtual Environment**
