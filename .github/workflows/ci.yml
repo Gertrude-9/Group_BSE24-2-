@@ -1,6 +1,5 @@
-name: CI Workflow
+name: CI for Blog Application
 
-# Trigger on push or pull request to main branch
 on:
   push:
     branches:
@@ -10,11 +9,34 @@ on:
       - main
 
 jobs:
-  hello-world:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      # Step 1: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run Hello World
-        run: echo "Hello, world!"
+      # Step 2: Frontend setup (React + Vite)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: ./team_blog_frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./team_blog_frontend
+
+      # Step 3: Backend setup (Django + DRF)
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./team_blog_backend
