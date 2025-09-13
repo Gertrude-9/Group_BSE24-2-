@@ -27,6 +27,16 @@ jobs:
         run: npm install
         working-directory: ./team_blog_frontend
 
+      # Step 2a: Lint frontend code
+      - name: Lint frontend code
+        run: npm run lint
+        working-directory: ./team_blog_frontend
+
+      # Step 2b: Run frontend tests (Jest)
+      - name: Run frontend tests
+        run: npm test
+        working-directory: ./team_blog_frontend
+
       - name: Build frontend
         run: npm run build
         working-directory: ./team_blog_frontend
