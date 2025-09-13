@@ -34,7 +34,7 @@ jobs:
 
       # Step 2b: Run frontend tests (Jest)
       - name: Run frontend tests
-        run: npm test
+        run: npm run test
         working-directory: ./team_blog_frontend
 
       - name: Build frontend
