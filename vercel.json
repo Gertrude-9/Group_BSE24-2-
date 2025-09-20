@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "team_blog_frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "team_blog_backend/blog_project/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.9"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "team_blog_backend/static/$1"
+    },
+    {
+      "src": "/media/(.*)",
+      "dest": "team_blog_backend/media/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "team_blog_frontend/$1"
+    }
+  ]
+}
