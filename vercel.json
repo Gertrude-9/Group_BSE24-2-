@@ -5,14 +5,14 @@
       "src": "team_blog_frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "team_blog_frontend/dist"
+        "distDir": "dist"  
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "team_blog_frontend/dist/index.html"
+      "dest": "dist/index.html" 
     }
   ]
 }
