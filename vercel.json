@@ -1,8 +1,18 @@
 {
+  "version": 2,
   "builds": [
-    { "src": "vite.config.js", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
+    {
+      "src": "team_blog_frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "team_blog_frontend/dist"
+      }
+    }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "/" }
+    {
+      "src": "/(.*)",
+      "dest": "team_blog_frontend/dist/index.html"
+    }
   ]
 }
