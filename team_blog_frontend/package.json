@@ -45,31 +45,14 @@
   },
   "jest": {
     "testEnvironment": "jest-environment-jsdom",
-    "moduleFileExtensions": [
-      "js",
-      "jsx"
-    ],
     "transform": {
-      "^.+\\.(js|jsx)$": "babel-jest"
+      "^.+\\.[jt]sx?$": "babel-jest"
     },
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.js"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
-    },
-    "testEnvironmentOptions": {
-      "customExportConditions": ["node", "node-addons"]
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!(.*\\.mjs$))"
-    ],
-    "globals": {
-      "import.meta": {
-        "env": {
-          "VITE_API_URL": "http://127.0.0.1:8000"
-        }
-      }
     }
   }
 }
