@@ -3,6 +3,18 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from '../App.jsx';
 
+// Mock import.meta.env before importing App
+Object.defineProperty(global, 'import', {
+  value: {
+    meta: {
+      env: {
+        VITE_API_URL: 'http://127.0.0.1:8000'
+      }
+    }
+  },
+  writable: true
+});
+
 // Mock fetch globally
 global.fetch = jest.fn(() =>
   Promise.resolve({
@@ -18,8 +30,8 @@ describe('App Component', () => {
   test('navigates to Team page when Team button clicked', async () => {
     render(<App />);
 
-    // Click the Team button using the data-testid
-    const teamButton = await screen.findByTestId('team-btn'); // Use findByTestId to wait for it to appear
+    // Click the Team button
+    const teamButton = screen.getByText('Team');
     fireEvent.click(teamButton);
 
     // Wait for Team page content to appear
