@@ -1,31 +1,29 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
-
-// Mock import.meta.env before importing App
-Object.defineProperty(global, 'import', {
-  value: {
-    meta: {
-      env: {
-        VITE_API_URL: 'http://127.0.0.1:8000'
-      }
-    }
-  },
-  writable: true,
-  configurable: true
-});
-
-// Mock fetch globally
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    json: () => Promise.resolve([]),
-  })
-);
-
 import App from '../App.jsx';
 
+// Mock global fetch within the test suite to avoid global pollution
+beforeAll(() => {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      json: () => Promise.resolve([]),
+    })
+  );
+});
+
 describe('App Component', () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    jest.clearAllMocks();
+  });
+
   test('renders without crashing', () => {
     render(<App />);
     expect(screen.getByText('Emerging Trends')).toBeInTheDocument();
+  });
+
+  // Optional: Add more tests as needed
+  test('renders loading state initially', () => {
+    render(<App />);
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 });
