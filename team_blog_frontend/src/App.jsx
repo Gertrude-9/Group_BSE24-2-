@@ -23,6 +23,7 @@ const App = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+
         const API_URL = getApiUrl();
         
         // Fetch team members
@@ -53,7 +54,9 @@ const App = () => {
       if (typeof currentPage === 'number') {
         setLoading(true);
         try {
+
           const API_URL = getApiUrl();
+
           const postRes = await fetch(`${API_URL}/blog-posts/${currentPage}/`);
           const postData = await postRes.json();
           setSelectedPost(postData);
