@@ -12,18 +12,20 @@ const App = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const API_URL = import.meta.env.VITE_API_URL || '/api';
+        
         // Fetch team members
-        const teamRes = await fetch('http://127.0.0.1:8000/api/team-members/');
+        const teamRes = await fetch(`${API_URL}/team-members/`);
         const teamData = await teamRes.json();
         setTeamMembers(teamData);
 
         // Fetch blog posts list
-        const postsRes = await fetch('http://127.0.0.1:8000/api/blog-posts/');
+        const postsRes = await fetch(`${API_URL}/blog-posts/`);
         const postsData = await postsRes.json();
         setBlogPosts(postsData);
 
         // Fetch about content
-        const aboutRes = await fetch('http://127.0.0.1:8000/api/about/');
+        const aboutRes = await fetch(`${API_URL}/about/`);
         const aboutData = await aboutRes.json();
         setAboutContent(aboutData.length > 0 ? aboutData[0].content : '');
       } catch (error) {
@@ -40,7 +42,8 @@ const App = () => {
       if (typeof currentPage === 'number') {
         setLoading(true);
         try {
-          const postRes = await fetch(`http://127.0.0.1:8000/api/blog-posts/${currentPage}/`);
+          const API_URL = import.meta.env.VITE_API_URL || '/api';
+          const postRes = await fetch(`${API_URL}/blog-posts/${currentPage}/`);
           const postData = await postRes.json();
           setSelectedPost(postData);
         } catch (error) {
