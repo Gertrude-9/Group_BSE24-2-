@@ -58,7 +58,9 @@ const App = () => {
         try {
           const API_URL = getApiUrl();
           const postRes = await fetch(`${API_URL}/api/blog-posts/${currentPage}/`);
+          
           if (!postRes.ok) throw new Error(`HTTP error! status: ${postRes.status}`);
+
           const postData = await postRes.json();
           setSelectedPost(postData);
         } catch (error) {

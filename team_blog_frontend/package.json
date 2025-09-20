@@ -18,6 +18,7 @@
     "@babel/eslint-parser": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
+    "babel-plugin-transform-import-meta": "^1.0.0",
     "@eslint/js": "^9.35.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@testing-library/jest-dom": "^6.8.0",
