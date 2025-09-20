@@ -5,8 +5,8 @@ const getApiUrl = () => {
   try {
     // Try to access import.meta (works in Vite)
     return import.meta.env.VITE_API_URL || '/api';
-  } catch (error) {
-    // Fallback to process.env (works in Jest/Node)
+  } catch {
+    // Fallback to process.env (works in Jest/Node) without unused error variable
     return process.env.VITE_API_URL || '/api';
   }
 };
@@ -164,7 +164,6 @@ const App = () => {
           <div className="nav-title">Emerging Trends</div>
           <div className="nav-links">
             <button onClick={() => setCurrentPage('home')} className="nav-link">Blog</button>
-            {/* Correctly added the data-testid here */}
             <button onClick={() => setCurrentPage('team')} className="nav-link" data-testid="team-btn">Team</button>
             <button onClick={() => setCurrentPage('about')} className="nav-link">About</button>
           </div>
