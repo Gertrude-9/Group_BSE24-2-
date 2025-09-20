@@ -25,22 +25,25 @@ const App = () => {
       try {
         const API_URL = getApiUrl();
         
-        // Fetch team members
-        const teamRes = await fetch(`${API_URL}/team-members/`);
+        // Fetch team members with /api/ prefix
+        const teamRes = await fetch(`${API_URL}/api/team-members/`);
+        if (!teamRes.ok) throw new Error(`HTTP error! status: ${teamRes.status}`);
         const teamData = await teamRes.json();
-        setTeamMembers(teamData);
+        setTeamMembers(Array.isArray(teamData) ? teamData : []);
 
-        // Fetch blog posts list
-        const postsRes = await fetch(`${API_URL}/blog-posts/`);
+        // Fetch blog posts list with /api/ prefix
+        const postsRes = await fetch(`${API_URL}/api/blog-posts/`);
+        if (!postsRes.ok) throw new Error(`HTTP error! status: ${postsRes.status}`);
         const postsData = await postsRes.json();
-        setBlogPosts(postsData);
+        setBlogPosts(Array.isArray(postsData) ? postsData : []);
 
-        // Fetch about content
-        const aboutRes = await fetch(`${API_URL}/about/`);
+        // Fetch about content with /api/ prefix
+        const aboutRes = await fetch(`${API_URL}/api/about/`);
+        if (!aboutRes.ok) throw new Error(`HTTP error! status: ${aboutRes.status}`);
         const aboutData = await aboutRes.json();
-        setAboutContent(aboutData.length > 0 ? aboutData[0].content : '');
+        setAboutContent(Array.isArray(aboutData) && aboutData.length > 0 ? aboutData[0].content : '');
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data:', error.message);
       }
       setLoading(false);
     };
@@ -54,11 +57,12 @@ const App = () => {
         setLoading(true);
         try {
           const API_URL = getApiUrl();
-          const postRes = await fetch(`${API_URL}/blog-posts/${currentPage}/`);
+          const postRes = await fetch(`${API_URL}/api/blog-posts/${currentPage}/`);
+          if (!postRes.ok) throw new Error(`HTTP error! status: ${postRes.status}`);
           const postData = await postRes.json();
           setSelectedPost(postData);
         } catch (error) {
-          console.error('Error fetching post detail:', error);
+          console.error('Error fetching post detail:', error.message);
           setSelectedPost(null);
         }
         setLoading(false);
