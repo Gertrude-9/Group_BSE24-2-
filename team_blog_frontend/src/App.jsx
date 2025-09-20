@@ -167,7 +167,7 @@ const App = () => {
     <div className="min-h-screen bg-gray-100 font-sans antialiased text-gray-800">
       <div className="nav">
         <nav className="nav-content">
-          <div className="nav-title">Emerging Trends</div>
+          <div className="nav-title">Emerging Trends HomeComing</div>
           <div className="nav-links">
             <button onClick={() => setCurrentPage('home')} className="nav-link">Blog</button>
             <button onClick={() => setCurrentPage('team')} className="nav-link" data-testid="team-btn">Team</button>
