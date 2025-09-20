@@ -46,13 +46,10 @@
   "jest": {
     "testEnvironment": "jest-environment-jsdom",
     "transform": {
-      "^.+\\.[jt]sx?$": "babel-jest"
+      "^.+\\.(js|jsx)$": "babel-jest"
     },
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.js"
-    ],
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1"
-    }
+    ]
   }
 }
