@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    "corsheaders",
     'blog_app',
     'corsheaders',
     'whitenoise.runserver_nostatic',
@@ -150,7 +151,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",   # Vite default dev server
-    "http://127.0.0.1:5173",   # sometimes needed if you access with 127.0.0.1
+    "http://127.0.0.1:8000",   # sometimes needed if you access with 127.0.0.1
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
