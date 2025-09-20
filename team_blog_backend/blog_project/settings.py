@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'rest_framework',
     "corsheaders",
     'blog_app',
-    'corsheaders',
     'whitenoise.runserver_nostatic',
 ]
 

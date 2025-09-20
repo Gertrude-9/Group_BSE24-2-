@@ -28,6 +28,8 @@
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.21",
     "babel-jest": "^30.1.2",
+    "babel-plugin-transform-import-meta": "^1.0.0",
+    "dotenv": "^17.2.2",
     "eslint": "^9.35.0",
     "eslint-plugin-css": "^0.11.0",
     "eslint-plugin-jest": "^29.0.1",
