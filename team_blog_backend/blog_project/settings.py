@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+if os.environ.get('RENDER'):
+    # This setting is specific to a production environment on Render
+    from django.core.management import call_command
+    call_command('migrate', verbosity=2, noinput=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
