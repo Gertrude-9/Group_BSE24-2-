@@ -3,10 +3,7 @@
   "builds": [
     {
       "src": "blog_project/wsgi.py",
-      "use": "@vercel/python",
-      "config": {
-        "handler": "blog_project.wsgi.application"
-      }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
