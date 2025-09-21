@@ -4,3 +4,11 @@ django-cors-headers==4.7.0
 djangorestframework==3.16.1
 pillow==11.3.0
 sqlparse==0.5.3
+
+# Deployment dependencies
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9
+tzdata==2025.2
+whitenoise==6.8.2
+gunicorn==23.0.0
+
