@@ -11,5 +11,7 @@
       "src": "/(.*)",
       "dest": "blog_project/wsgi.py"
     }
-  ]
+  ],
+   "installCommand": "pip install -r requirements.txt",
+  "buildCommand": "bash build.sh"
 }
