@@ -1,52 +1,70 @@
 import React, { useState, useEffect } from 'react';
 
-// Use a CSS-in-JS approach or inline styles for simplicity in a single file
+// Helper function to get API URL
+const getApiUrl = () => {
+  try {
+    // Try to access import.meta (works in Vite)
+    return import.meta.env.VITE_API_URL || '/api';
+  } catch {
+    // Fallback to process.env (works in Jest/Node) without unused error variable
+    return process.env.VITE_API_URL || '/api';
+  }
+};
+
 const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [teamMembers, setTeamMembers] = useState([]);
   const [blogPosts, setBlogPosts] = useState([]);
   const [aboutContent, setAboutContent] = useState('');
-  const [selectedPost, setSelectedPost] = useState(null); // For individual post detail
-  const [loading, setLoading] = useState(true); // General loading flag
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch team members
-        const teamRes = await fetch('http://127.0.0.1:8000/api/team-members/');
+        const API_URL = getApiUrl();
+        
+        // Fetch team members with /api/ prefix
+        const teamRes = await fetch(`${API_URL}/api/team-members/`);
+        if (!teamRes.ok) throw new Error(`HTTP error! status: ${teamRes.status}`);
         const teamData = await teamRes.json();
-        setTeamMembers(teamData);
+        setTeamMembers(Array.isArray(teamData) ? teamData : []);
 
-        // Fetch blog posts list
-        const postsRes = await fetch('http://127.0.0.1:8000/api/blog-posts/');
+        // Fetch blog posts list with /api/ prefix
+        const postsRes = await fetch(`${API_URL}/api/blog-posts/`);
+        if (!postsRes.ok) throw new Error(`HTTP error! status: ${postsRes.status}`);
         const postsData = await postsRes.json();
-        setBlogPosts(postsData);
+        setBlogPosts(Array.isArray(postsData) ? postsData : []);
 
-        // Fetch about (assume list, take first item)
-        const aboutRes = await fetch('http://127.0.0.1:8000/api/about/');
+        // Fetch about content with /api/ prefix
+        const aboutRes = await fetch(`${API_URL}/api/about/`);
+        if (!aboutRes.ok) throw new Error(`HTTP error! status: ${aboutRes.status}`);
         const aboutData = await aboutRes.json();
-        setAboutContent(aboutData.length > 0 ? aboutData[0].content : ''); // Fallback if empty
+        setAboutContent(Array.isArray(aboutData) && aboutData.length > 0 ? aboutData[0].content : '');
       } catch (error) {
-        console.error('Error fetching data:', error);
-        // Optional: Set fallback to hardcoded if fetch fails
+        console.error('Error fetching data:', error.message);
       }
       setLoading(false);
     };
 
     fetchData();
-  }, []); // Run once on mount
+  }, []);
 
   useEffect(() => {
     const fetchPostDetail = async () => {
-      if (typeof currentPage === 'number') { // Assuming post IDs are numbers
+      if (typeof currentPage === 'number') {
         setLoading(true);
         try {
-          const postRes = await fetch(`http://127.0.0.1:8000/api/blog-posts/${currentPage}/`);
+          const API_URL = getApiUrl();
+          const postRes = await fetch(`${API_URL}/api/blog-posts/${currentPage}/`);
+          
+          if (!postRes.ok) throw new Error(`HTTP error! status: ${postRes.status}`);
+
           const postData = await postRes.json();
           setSelectedPost(postData);
         } catch (error) {
-          console.error('Error fetching post detail:', error);
+          console.error('Error fetching post detail:', error.message);
           setSelectedPost(null);
         }
         setLoading(false);
@@ -54,11 +72,11 @@ const App = () => {
     };
 
     fetchPostDetail();
-  }, [currentPage]); // Run when currentPage changes
+  }, [currentPage]);
 
   const renderContent = () => {
     if (loading) {
-      return <div className="container">Loading...</div>; // Simple loading indicator
+      return <div className="container">Loading...</div>;
     }
 
     switch (currentPage) {
@@ -85,35 +103,31 @@ const App = () => {
             </div>
           </div>
         );
-     case 'team':
-  return (
-    <div className="container">
-      <h1 className="team-title">Meet Our Team</h1>
-      <div className="team-grid">
-        {teamMembers.map((member) => {
-          console.log('Avatar path for', member.name, ':', member.avatar);
-          return (
-            <div key={member.id} className="team-member">
-              <img
-  src={member.avatar || 'https://placehold.co/100x100?text=No+Image'}
-  alt={member.name}
-  className="team-member-img"
-/>
-
-              <h2 className="team-member-name">{member.name}</h2>
-              <p className="team-member-role">{member.role}</p>
-              <p className="team-member-bio">{member.bio}</p>
+      case 'team':
+        return (
+          <div className="container">
+            <h1 className="team-title">Meet Our Team</h1>
+            <div className="team-grid">
+              {teamMembers.map((member) => (
+                <div key={member.id} className="team-member">
+                  <img
+                    src={member.avatar || 'https://placehold.co/100x100?text=No+Image'}
+                    alt={member.name}
+                    className="team-member-img"
+                  />
+                  <h2 className="team-member-name">{member.name}</h2>
+                  <p className="team-member-role">{member.role}</p>
+                  <p className="team-member-bio">{member.bio}</p>
+                </div>
+              ))}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+          </div>
+        );
       case 'about':
         return (
           <div className="about-container">
             <h1 className="about-title">About Us</h1>
-            <p className="about-text">{aboutContent}</p> {/* Dynamic content */}
+            <p className="about-text">{aboutContent}</p>
           </div>
         );
       default:
@@ -156,7 +170,7 @@ const App = () => {
           <div className="nav-title">Emerging Trends</div>
           <div className="nav-links">
             <button onClick={() => setCurrentPage('home')} className="nav-link">Blog</button>
-            <button onClick={() => setCurrentPage('team')} className="nav-link">Team</button>
+            <button onClick={() => setCurrentPage('team')} className="nav-link" data-testid="team-btn">Team</button>
             <button onClick={() => setCurrentPage('about')} className="nav-link">About</button>
           </div>
         </nav>

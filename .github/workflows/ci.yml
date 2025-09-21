@@ -1,0 +1,52 @@
+name: CI for Blog Application
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Frontend setup (React + Vite)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.13.1'
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: ./team_blog_frontend
+
+      # Step 2a: Lint frontend code
+      - name: Lint frontend code
+        run: npm run lint
+        working-directory: ./team_blog_frontend
+
+      # Step 2b: Run frontend tests (Jest)
+      - name: Run frontend tests
+        run: npm run test
+        working-directory: ./team_blog_frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./team_blog_frontend
+
+      # Step 3: Backend setup (Django + DRF)
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install backend dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./team_blog_backend
