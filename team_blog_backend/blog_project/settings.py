@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-xc(d$%m#2m0d)9%=a*ey@&s8^$d5_sm*ggdd5251y6%ra6!oe=
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '.vercel.app', 
+    '.render.com', 
     '127.0.0.1', 
     'localhost',
 ]
