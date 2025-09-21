@@ -16,5 +16,3 @@ python manage.py loaddata blog_app_data.json
 
 
 
-
-
