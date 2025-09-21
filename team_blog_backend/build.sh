@@ -1,7 +1,9 @@
-echo "Starting migrations..."
-python3 manage.py makemigrations --noinput
-python3 manage.py migrate --noinput
-echo "Migrations complete."
-echo "Collecting static files..."
-python3 manage.py collectstatic --noinput --clear
-echo "Static files collected."
+#!/usr/bin/env bash
+# Exit on first error
+set -o errexit
+
+# Install Python dependencies
+pip install -r team_blog_backend/requirements.txt
+
+# Run Django migrations
+python team_blog_backend/manage.py migrate --no_input
