@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [
     '.render.com', 
     '127.0.0.1', 
     'localhost',
+    'group-bse24-2.onrender.com',
 ]
 
 
