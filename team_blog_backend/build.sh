@@ -16,3 +16,5 @@ python manage.py loaddata --encoding=latin-1 blog_app_data.json
 
 
 
+
+
