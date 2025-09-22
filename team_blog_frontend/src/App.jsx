@@ -25,20 +25,20 @@ const App = () => {
       try {
         const API_URL = getApiUrl();
         
-        // Fetch team members with /api/ prefix
-        const teamRes = await fetch(`${API_URL}/api/team-members/`);
+        // Fetch team members 
+        const teamRes = await fetch(`${API_URL}/team-members/`);
         if (!teamRes.ok) throw new Error(`HTTP error! status: ${teamRes.status}`);
         const teamData = await teamRes.json();
         setTeamMembers(Array.isArray(teamData) ? teamData : []);
 
-        // Fetch blog posts list with /api/ prefix
-        const postsRes = await fetch(`${API_URL}/api/blog-posts/`);
+        // Fetch blog posts 
+        const postsRes = await fetch(`${API_URL}/blog-posts/`);
         if (!postsRes.ok) throw new Error(`HTTP error! status: ${postsRes.status}`);
         const postsData = await postsRes.json();
         setBlogPosts(Array.isArray(postsData) ? postsData : []);
 
-        // Fetch about content with /api/ prefix
-        const aboutRes = await fetch(`${API_URL}/api/about/`);
+        // Fetch about content 
+        const aboutRes = await fetch(`${API_URL}/about/`);
         if (!aboutRes.ok) throw new Error(`HTTP error! status: ${aboutRes.status}`);
         const aboutData = await aboutRes.json();
         setAboutContent(Array.isArray(aboutData) && aboutData.length > 0 ? aboutData[0].content : '');
@@ -57,7 +57,7 @@ const App = () => {
         setLoading(true);
         try {
           const API_URL = getApiUrl();
-          const postRes = await fetch(`${API_URL}/api/blog-posts/${currentPage}/`);
+          const postRes = await fetch(`${API_URL}/blog-posts/${currentPage}/`);
           
           if (!postRes.ok) throw new Error(`HTTP error! status: ${postRes.status}`);
 
