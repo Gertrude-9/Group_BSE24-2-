@@ -2,13 +2,8 @@ import React, { useState, useEffect } from 'react';
 
 // Helper function to get API URL
 const getApiUrl = () => {
-  try {
-    // Try to access import.meta (works in Vite)
-    return import.meta.env.VITE_API_URL || '/api';
-  } catch {
-    // Fallback to process.env (works in Jest/Node) without unused error variable
-    return process.env.VITE_API_URL || '/api';
-  }
+  // Return the VITE_API_URL environment variable without a fallback
+  return import.meta.env.VITE_API_URL;
 };
 
 const App = () => {
