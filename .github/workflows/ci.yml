@@ -103,4 +103,4 @@ jobs:
       - name: Trigger Render Backend Staging Deployment
         run: |
           # Use curl to make a POST request to the Render Webhook
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
