@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class TeamMember(models.Model):
     name = models.CharField(max_length=100)
     role = models.CharField(max_length=100)
@@ -8,6 +9,7 @@ class TeamMember(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class BlogPost(models.Model):
     title = models.CharField(max_length=200)
@@ -18,6 +20,7 @@ class BlogPost(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class About(models.Model):
     content = models.TextField()  # Editable "About Us" text
