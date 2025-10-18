@@ -86,8 +86,7 @@ jobs:
 
       # Deploy the artifact using the Vercel CLI and SECRETS
       - name: Trigger Vercel Deployment via Hook
-        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
-
+        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }
           
   # ----------------------------------------------------------------------
   # 3. DEPLOY BACKEND TO RENDER (CD Stage)
