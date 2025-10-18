@@ -26,7 +26,6 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
         working-directory: ./team_blog_frontend
-        
 
       # Step 2a: Lint frontend code
       - name: Lint frontend code
