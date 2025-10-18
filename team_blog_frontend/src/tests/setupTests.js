@@ -1,11 +1,17 @@
 // src/tests/setupTests.js
-// Mock fetch to simulate API calls with a delay
+
+// ✅ Correctly define import.meta.env for Vite
+Object.defineProperty(globalThis, 'import', {
+  value: { meta: { env: { VITE_API_URL: 'http://localhost:3000' } } },
+  writable: false,
+});
+
 beforeAll(() => {
-  jest.useFakeTimers(); // Use fake timers for controlled delays
+  jest.useFakeTimers();
   global.fetch = jest.fn(() =>
     Promise.resolve({
       ok: true,
-      json: () => new Promise(resolve => setTimeout(() => resolve([]), 100)) // 100ms delay
+      json: () => new Promise(resolve => setTimeout(() => resolve([]), 100)),
     })
   );
 });
@@ -16,5 +22,4 @@ afterEach(() => {
 
 afterAll(() => {
   jest.useRealTimers();
-  jest.restoreAllMocks();
 });

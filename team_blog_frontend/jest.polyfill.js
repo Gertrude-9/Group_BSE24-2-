@@ -5,5 +5,4 @@ if (typeof TextEncoder === 'undefined') {
   global.TextDecoder = TextDecoder;
 }
 
-// Mock VITE_API_URL to align with the app
 global.importMeta = { env: { VITE_API_URL: '' } };
