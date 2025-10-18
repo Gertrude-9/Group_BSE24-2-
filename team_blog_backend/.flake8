@@ -1,5 +1,4 @@
-# C:\...\team_blog_backend\.flake8
 [flake8]
 max-line-length = 120
 exclude = venv,.git,__pycache__,docs,blog_project/settings.py
-ignore = E501,W503 # Ignore max-line-length and line break before binary operator
+ignore = E501,W503 

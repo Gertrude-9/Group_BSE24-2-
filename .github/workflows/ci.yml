@@ -26,8 +26,6 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
         working-directory: ./team_blog_frontend
-        env:
-          VITE_API_URL=https://group-bse24-2.onrender.com
 
       # Step 2a: Lint frontend code
       - name: Lint frontend code

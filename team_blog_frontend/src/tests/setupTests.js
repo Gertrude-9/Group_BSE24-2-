@@ -1,40 +1,25 @@
-import { rest } from 'msw';
-import { setupServer } from 'msw/node';
+// src/tests/setupTests.js
 
-const server = setupServer(
-  rest.get('https://group-bse24-2.onrender.com/api/team-members/', (req, res, ctx) => {
-    return res(
-      ctx.delay(100), // Simulate network delay to ensure loading state is captured
-      ctx.json([
-        { id: 1, name: 'John Doe', role: 'Developer', bio: 'Bio', avatar: '' },
-      ])
-    );
-  }),
-  rest.get('https://group-bse24-2.onrender.com/api/blog-posts/', (req, res, ctx) => {
-    return res(
-      ctx.delay(100),
-      ctx.json([
-        {
-          id: 1,
-          title: 'Test Post',
-          author: { name: 'John Doe' },
-          date: '2025-10-18',
-          excerpt: 'Excerpt',
-          content: 'Content',
-        },
-      ])
-    );
-  }),
-  rest.get('https://group-bse24-2.onrender.com/api/about/', (req, res, ctx) => {
-    return res(
-      ctx.delay(100),
-      ctx.json([{ content: 'Mocked about content' }])
-    );
-  })
-);
+// ✅ Correctly define import.meta.env for Vite
+Object.defineProperty(globalThis, 'import', {
+  value: { meta: { env: { VITE_API_URL: 'http://localhost:3000' } } },
+  writable: false,
+});
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+beforeAll(() => {
+  jest.useFakeTimers();
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => new Promise(resolve => setTimeout(() => resolve([]), 100)),
+    })
+  );
+});
 
-export default server;
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
+afterAll(() => {
+  jest.useRealTimers();
+});

@@ -2,7 +2,8 @@
 
 from django.test import TestCase
 from django.utils import timezone
-from .models import BlogPost, TeamMember # <-- CORRECTED IMPORT
+from .models import BlogPost, TeamMember  # <-- CORRECTED IMPORT
+
 
 class BlogPostModelTest(TestCase):
     """
@@ -19,8 +20,8 @@ class BlogPostModelTest(TestCase):
         # 2. Create the BlogPost object using the TeamMember
         self.post = BlogPost.objects.create(
             title="Test Post Title",
-            author=self.member, # <-- Assign the required ForeignKey
-            date=timezone.now().date(), # <-- Use today's date
+            author=self.member,  # <-- Assign the required ForeignKey
+            date=timezone.now().date(),  # <-- Use today's date
             excerpt="A short summary.",
             content="Test Post Content is here."
         )
@@ -31,11 +32,11 @@ class BlogPostModelTest(TestCase):
         """
         # Get the post from the database
         post = BlogPost.objects.get(title="Test Post Title")
-        
+
         # Check that the title, content, and author are correct
         self.assertEqual(post.title, "Test Post Title")
         self.assertEqual(post.content, "Test Post Content is here.")
-        self.assertEqual(post.author.name, "Test Author") # Check the foreign key link
-        self.assertTrue(isinstance(post, BlogPost)) # Check the instance type
+        self.assertEqual(post.author.name, "Test Author")  # Check the foreign key link
+        self.assertTrue(isinstance(post, BlogPost))  # Check the instance type
 
 # You can add tests for the TeamMember and About models here too!

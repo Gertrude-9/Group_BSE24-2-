@@ -4,8 +4,8 @@ module.exports = {
   transform: {
     '^.+\\.(js|jsx)$': 'babel-jest'
   },
-  setupFilesAfterEnv: ['<rootDir>/tests/setupTests.js'], // Update this path
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setupTests.js'], // Update this path
   transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$))'
+    'node_modules/(?!until-async/)'
   ]
 };
