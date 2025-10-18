@@ -85,12 +85,8 @@ jobs:
         run: npm install -g vercel
 
       # Deploy the artifact using the Vercel CLI and SECRETS
-      - name: Deploy to Vercel Staging
-        working-directory: ./team_blog_frontend
-        run: vercel deploy --prebuilt --token ${{ secrets.VERCEL_TOKEN }} --prod=false ./dist
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Trigger Vercel Deployment via Hook
+        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }
           
   # ----------------------------------------------------------------------
   # 3. DEPLOY BACKEND TO RENDER (CD Stage)
