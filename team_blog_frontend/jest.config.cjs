@@ -4,8 +4,7 @@ module.exports = {
   transform: {
     '^.+\\.(js|jsx)$': 'babel-jest'
   },
-  setupFiles: ['<rootDir>/jest.polyfill.js'],
-  setupFilesAfterEnv: ['<rootDir>/src/tests/setupTests.js'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setupTests.js'], // Update this path
   transformIgnorePatterns: [
     'node_modules/(?!until-async/)'
   ]
