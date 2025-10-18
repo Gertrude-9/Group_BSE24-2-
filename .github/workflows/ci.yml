@@ -26,6 +26,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
         working-directory: ./team_blog_frontend
+        env:
+          VITE_API_URL=https://group-bse24-2.onrender.com
 
       # Step 2a: Lint frontend code
       - name: Lint frontend code
@@ -49,4 +51,12 @@ jobs:
 
       - name: Install backend dependencies
         run: pip install -r requirements.txt
+        working-directory: ./team_blog_backend
+
+      - name: Lint backend code # ADDED QUALITY CHECK
+        run: flake8 .
+        working-directory: ./team_blog_backend
+
+      - name: Run backend tests # ADDED AUTOMATED TESTING
+        run: python manage.py test
         working-directory: ./team_blog_backend
