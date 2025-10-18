@@ -1,4 +1,4 @@
-name: CI for Blog Application
+name: CI/CD for Blog Application
 
 on:
   push:
@@ -9,17 +9,21 @@ on:
       - main
 
 jobs:
+  # ----------------------------------------------------------------------
+  # 1. BUILD JOB (CI Quality Gate)
+  # This job runs tests and prepares artifacts. It must succeed for deployment.
+  # ----------------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
       # Step 1: Checkout repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Recommended: Use latest action version
 
-      # Step 2: Frontend setup (React + Vite)
+      # Frontend Setup (React + Vite)
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4 # Synchronized to v4
         with:
           node-version: '22.13.1'
 
@@ -27,21 +31,22 @@ jobs:
         run: npm install
         working-directory: ./team_blog_frontend
 
-      # Step 2a: Lint frontend code
-      - name: Lint frontend code
-        run: npm run lint
+      - name: Run frontend tests and linting
+        run: npm run lint && npm run test
         working-directory: ./team_blog_frontend
 
-      # Step 2b: Run frontend tests (Jest)
-      - name: Run frontend tests
-        run: npm run test
-        working-directory: ./team_blog_frontend
-
-      - name: Build frontend
+      - name: Build frontend (Generates 'dist')
         run: npm run build
         working-directory: ./team_blog_frontend
+        
+      # CRITICAL STEP: Upload the compiled 'dist' folder for deployment
+      - name: Archive frontend build artifacts
+        uses: actions/upload-artifact@v4 # Synchronized to v4
+        with:
+          name: frontend-dist
+          path: ./team_blog_frontend/dist
 
-      # Step 3: Backend setup (Django + DRF)
+      # Backend Setup (Django + DRF)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -51,10 +56,55 @@ jobs:
         run: pip install -r requirements.txt
         working-directory: ./team_blog_backend
 
-      - name: Lint backend code # ADDED QUALITY CHECK
-        run: flake8 .
+      - name: Run backend tests and linting
+        run: flake8 . && python manage.py test
         working-directory: ./team_blog_backend
+        
+  # ----------------------------------------------------------------------
+  # 2. DEPLOY FRONTEND TO VERCEL (CD Stage)
+  # Runs ONLY if the 'build' job passed successfully.
+  # ----------------------------------------------------------------------
+  deploy_frontend:
+    needs: [build] # <-- Quality Gate
+    runs-on: ubuntu-latest
+    environment: staging_vercel 
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Synchronized to v4
 
-      - name: Run backend tests # ADDED AUTOMATED TESTING
-        run: python manage.py test
-        working-directory: ./team_blog_backend
+      # Download the pre-built 'dist' folder
+      - name: Download frontend build artifact
+        uses: actions/download-artifact@v4 # Synchronized to v4
+        with:
+          name: frontend-dist
+          path: ./team_blog_frontend/dist
+        
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      # Deploy the artifact using the Vercel CLI and SECRETS
+      - name: Deploy to Vercel Staging
+        working-directory: ./team_blog_frontend
+        run: vercel deploy --prebuilt --token ${{ secrets.VERCEL_TOKEN }} --prod=false ./dist
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+  # ----------------------------------------------------------------------
+  # 3. DEPLOY BACKEND TO RENDER (CD Stage)
+  # Runs ONLY if the 'build' job passed successfully.
+  # ----------------------------------------------------------------------
+  deploy_backend:
+    needs: [build] # <-- Quality Gate
+    runs-on: ubuntu-latest
+    environment: staging_render
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      # Trigger Render Deployment using the Deploy Hook URL stored in secrets
+      - name: Trigger Render Backend Staging Deployment
+        run: |
+          # Use curl to make a POST request to the Render Webhook
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
