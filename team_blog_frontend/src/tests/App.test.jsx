@@ -1,30 +1,20 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import App from '../App.jsx';
 
-// Mock global fetch within the test suite to avoid global pollution
-beforeAll(() => {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      json: () => Promise.resolve([]),
-    })
-  );
-});
-
 describe('App Component', () => {
-  beforeEach(() => {
-    // Reset mocks before each test
-    jest.clearAllMocks();
-  });
-
-  test('renders without crashing', () => {
+  test('renders without crashing', async () => {
     render(<App />);
-    expect(screen.getByText('Emerging Trends')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Emerging Trends')).toBeInTheDocument();
+    });
   });
 
-  // Optional: Add more tests as needed
-  test('renders loading state initially', () => {
+  test('renders loading state initially', async () => {
     render(<App />);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+      expect(screen.getByText('Our Team Blog')).toBeInTheDocument();
+    });
   });
 });
