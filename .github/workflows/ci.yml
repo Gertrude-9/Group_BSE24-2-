@@ -105,3 +105,49 @@ jobs:
         run: |
           # Use curl to make a POST request to the Render Webhook
           curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+  # ----------------------------------------------------------------------
+  # 4. DEPLOY FRONTEND TO VERCEL (CD PRODUCTION Stage)
+  # Runs ONLY if the 'build' job passed and a Git tag was pushed.
+  # ----------------------------------------------------------------------
+  deploy_frontend_prod: # <--- 2. NEW PRODUCTION JOB
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: production_vercel 
+    # Only run on tags (e.g., v1.0.0)
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Download the pre-built 'dist' folder
+      - name: Download frontend build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./team_blog_frontend/dist
+        
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      # Deploy the artifact using the dedicated Production Hook
+      - name: Trigger Vercel Deployment via Hook (Production)
+        run: curl -X POST ${{ secrets.VERCEL_PROD_HOOK }}
+
+  # ----------------------------------------------------------------------
+  # 5. DEPLOY BACKEND TO RENDER (CD PRODUCTION Stage)
+  # Runs ONLY if the 'build' job passed and a Git tag was pushed.
+  # ----------------------------------------------------------------------
+  deploy_backend_prod: # <--- 3. NEW PRODUCTION JOB
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: production_render
+    # Only run on tags (e.g., v1.0.0)
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      # Trigger Render Deployment using the dedicated Production Hook
+      - name: Trigger Render Backend Production Deployment
+        run: |
+          curl -X POST ${{ secrets.RENDER_PROD_HOOK }}
