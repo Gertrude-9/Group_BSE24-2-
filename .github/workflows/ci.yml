@@ -180,3 +180,4 @@ jobs:
             
             View Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           channel: '#alerts-and-deploys'
+
