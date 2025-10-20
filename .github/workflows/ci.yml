@@ -164,19 +164,39 @@ jobs:
     if: always() # Run even if previous jobs failed (to log status)
     
     steps:
+      - name: Checkout code (required for this action)
+        uses: actions/checkout@v4
+
       - name: Notify on Production Status (Slack)
-        uses: rjstone/slack-bot-github-action@v2
+        uses: slackapi/slack-github-action@v1.26.0 # <--- CORRECTED ACTION
+
         # Requires a SLACK_WEBHOOK_URL secret to be configured in GitHub
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
-        with:
-          message: |
-            *DEPLOYMENT EVENT LOGGED!*
-            Environment: Production
-            Release: `${{ github.ref_name }}`
-            
-            Frontend Status: ${{ needs.deploy_frontend_prod.result }}
-            Backend Status: ${{ needs.deploy_backend_prod.result }}
-            
-            View Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          channel: '#alerts-and-deploys'
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
+        with:
+          payload: |
+            {
+              "text": ":rocket: *DEPLOYMENT EVENT LOGGED!*",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":rocket: *Production Deployment Complete* :rocket:\n\n*Release:* `${{ github.ref_name }}`\n*Commit:* `${{ github.sha }}`\n\n*Frontend Status:* ${{ needs.deploy_frontend_prod.result }}\n*Backend Status:* ${{ needs.deploy_backend_prod.result }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Workflow Run"
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
