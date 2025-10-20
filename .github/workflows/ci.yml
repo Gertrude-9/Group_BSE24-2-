@@ -180,6 +180,7 @@ jobs:
                   "text": {
                     "type": "mrkdwn",
                     "text": ":rocket: *Production Deployment Complete* :rocket:\n\n*Release:* `${{ github.ref_name }}`\n*Commit:* `${{ github.sha }}`\n\n*Frontend Status:* `${{ needs.deploy_frontend_prod.result }}`\n*Backend Status:* `${{ needs.deploy_backend_prod.result }}`"
+
                   }
                 },
                 {
