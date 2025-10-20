@@ -153,3 +153,31 @@ jobs:
       - name: Trigger Render Backend Production Deployment
         run: |
           curl -X POST ${{ secrets.RENDER_PROD_HOOK }}
+
+  # ----------------------------------------------------------------------
+  # 6. DEPLOYMENT NOTIFICATION (LOGGING STEP)
+  # ----------------------------------------------------------------------
+  deployment_notification:
+    runs-on: ubuntu-latest
+    # Requires BOTH production jobs to succeed to confirm a successful release
+    needs: [deploy_frontend_prod, deploy_backend_prod] 
+    if: always() # Run even if previous jobs failed (to log status)
+    
+    steps:
+      - name: Notify on Production Status (Slack)
+        uses: rjstone/slack-bot-github-action@v2
+        # Requires a SLACK_WEBHOOK_URL secret to be configured in GitHub
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
+        with:
+          message: |
+            *DEPLOYMENT EVENT LOGGED!*
+            Environment: Production
+            Release: `${{ github.ref_name }}`
+            
+            Frontend Status: ${{ needs.deploy_frontend_prod.result }}
+            Backend Status: ${{ needs.deploy_backend_prod.result }}
+            
+            View Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          channel: '#alerts-and-deploys'
+

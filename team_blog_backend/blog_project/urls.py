@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from django.views.generic.base import RedirectView  # Import RedirectView
 
 urlpatterns = [
+    path('', include('django_prometheus.urls')),
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='blog-posts', permanent=False), name='index'),
     path('', include('blog_app.urls')),
