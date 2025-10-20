@@ -10,3 +10,5 @@ whitenoise==6.8.2
 gunicorn
 Pillow
 flake8
+sentry-sdk
+django-prometheus
