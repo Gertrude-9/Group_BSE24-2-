@@ -159,21 +159,18 @@ jobs:
   # ----------------------------------------------------------------------
   deployment_notification:
     runs-on: ubuntu-latest
-    # Requires BOTH production jobs to succeed to confirm a successful release
-    needs: [deploy_frontend_prod, deploy_backend_prod] 
-    if: always() # Run even if previous jobs failed (to log status)
-    
+    needs: [deploy_frontend_prod, deploy_backend_prod]
+    if: always()
+
     steps:
       - name: Checkout code (required for this action)
         uses: actions/checkout@v4
 
       - name: Notify on Production Status (Slack)
-        uses: slackapi/slack-github-action@v1.26.0 # <--- CORRECTED ACTION
-
-        # Requires a SLACK_WEBHOOK_URL secret to be configured in GitHub
+        uses: slackapi/slack-github-action@v1.26.0
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
-        with:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        with:
           payload: |
             {
               "text": ":rocket: *DEPLOYMENT EVENT LOGGED!*",
@@ -182,7 +179,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":rocket: *Production Deployment Complete* :rocket:\n\n*Release:* `${{ github.ref_name }}`\n*Commit:* `${{ github.sha }}`\n\n*Frontend Status:* ${{ needs.deploy_frontend_prod.result }}\n*Backend Status:* ${{ needs.deploy_backend_prod.result }}"
+                    "text": ":rocket: *Production Deployment Complete* :rocket:\n\n*Release:* `${{ github.ref_name }}`\n*Commit:* `${{ github.sha }}`\n\n*Frontend Status:* `${{ needs.deploy_frontend_prod.result }}`\n*Backend Status:* `${{ needs.deploy_backend_prod.result }}`"
                   }
                 },
                 {
