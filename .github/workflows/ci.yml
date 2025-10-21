@@ -190,7 +190,6 @@ jobs:
     # FIX: Must list both jobs here to ensure their results are accessible later
     needs: [deploy_frontend_prod, deploy_backend_prod] 
     if: always() && startsWith(github.ref, 'refs/tags/v')
-
     steps:
       - name: Checkout code (required for this action)
         uses: actions/checkout@v4
