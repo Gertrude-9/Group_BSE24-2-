@@ -157,9 +157,10 @@ jobs:
         id: payload_staging
         run: |
           PAYLOAD=$(
-          jq -n \
-            --arg text ":gear: *Staging Deployment Logged!* (Branch: ${{ github.ref_name }})\n\n- Frontend Status: ${{ needs.deploy_frontend.result }}\n- Backend Status: ${{ needs.deploy_backend.result }}\n\nView Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-            '{text: $text}'
+          PAYLOAD=$(
+            jq -n \
+              --arg text ":gear: *Staging Deployment Logged!* (Branch: ${{ github.ref_name }})\n\n- Frontend Status: ${{ needs.deploy_frontend.result }}\n- Backend Status: ${{ needs.deploy_backend.result }}\n\nView Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              '{text: $text}' | tr -d '\n\r'
           )
           echo "payload=$PAYLOAD" >> $GITHUB_OUTPUT
         shell: bash
