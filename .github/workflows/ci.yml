@@ -148,7 +148,6 @@ jobs:
     # FIX: Listing both staging jobs here
     needs: [deploy_frontend, deploy_backend]
     if: always() && github.ref == 'refs/heads/main'
-  
     steps:
       - name: Checkout code (required for this action)
         uses: actions/checkout@v4
