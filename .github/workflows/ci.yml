@@ -158,7 +158,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
         with:
-          slack-message: |
+          payload: |
               :gear: *Staging Deployment Logged!* (Branch: ${{ github.ref_name }})
               
               - Frontend Status: ${{ needs.deploy_frontend.result }}
@@ -184,7 +184,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
         with:
-          slack-message: |
+          payload: |
               :rocket: *Production Deployment Logged!* (Release: ${{ github.ref_name }})
               
               - Frontend Status: ${{ needs.deploy_frontend_prod.result }}
