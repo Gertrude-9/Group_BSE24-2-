@@ -155,12 +155,41 @@ jobs:
           curl -X POST ${{ secrets.RENDER_PROD_HOOK }}
 
   # ----------------------------------------------------------------------
-  # 6. DEPLOYMENT NOTIFICATION (LOGGING STEP)
+  # 6. DEPLOYMENT NOTIFICATION FOR STAGING (NEW LOGGING STEP)
   # ----------------------------------------------------------------------
-  deployment_notification:
+  staging_notification:
     runs-on: ubuntu-latest
-    needs: [deploy_frontend_prod, deploy_backend_prod]
-    if: always()
+    # Wait for ONLY the frontend staging deployment job to finish.
+    needs: [deploy_frontend]
+    # The job MUST run only if the workflow was triggered by a push to 'main'
+    if: always() && github.ref == 'refs/heads/main'
+ 
+    steps:
+      - name: Checkout code (required for this action)
+        uses: actions/checkout@v4
+
+      - name: Notify on Staging Status (Slack)
+        uses: slackapi/slack-github-action@v1.26.0
+          
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
+        with:
+          text: |
+              :gear: *Staging Deployment Logged!* (Branch: ${{ github.ref_name }})
+              
+              - Frontend Status: ${{ needs.deploy_frontend.result }}
+              - Backend Status: ${{ needs.deploy_backend.result }}
+              
+              View Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              
+  # ----------------------------------------------------------------------
+  # 7. DEPLOYMENT NOTIFICATION FOR PRODUCTION (FIXED DEPENDENCY)
+  # ----------------------------------------------------------------------
+  deployment_notification:
+    runs-on: ubuntu-latest
+    # FIX: Must list both jobs here to ensure their results are accessible later
+    needs: [deploy_frontend_prod, deploy_backend_prod] 
+    if: always() && startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - name: Checkout code (required for this action)
@@ -168,32 +197,14 @@ jobs:
 
       - name: Notify on Production Status (Slack)
         uses: slackapi/slack-github-action@v1.26.0
+        
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
         with:
-          payload: |
-            {
-              "text": ":rocket: *DEPLOYMENT EVENT LOGGED!*",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":rocket: *Production Deployment Complete* :rocket:\n\n*Release:* `${{ github.ref_name }}`\n*Commit:* `${{ github.sha }}`\n\n*Frontend Status:* `${{ needs.deploy_frontend_prod.result }}`\n*Backend Status:* `${{ needs.deploy_backend_prod.result }}`"
-                  }
-                },
-                {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "button",
-                      "text": {
-                        "type": "plain_text",
-                        "text": "View Workflow Run"
-                      },
-                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }
-                  ]
-                }
-              ]
-            }
+          text: |
+              :rocket: *Production Deployment Logged!* (Release: ${{ github.ref_name }})
+
+              - Frontend Status: ${{ needs.deploy_frontend_prod.result }}
+              - Backend Status: ${{ needs.deploy_backend_prod.result }}
+
+              View Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
