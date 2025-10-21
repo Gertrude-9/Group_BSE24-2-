@@ -141,53 +141,69 @@ jobs:
           curl -X POST ${{ secrets.RENDER_PROD_HOOK }}
 
   # ----------------------------------------------------------------------
-  # 6. DEPLOYMENT NOTIFICATION FOR STAGING (FIXED INDENTATION & DEPENDENCY)
+  # 6. DEPLOYMENT NOTIFICATION FOR STAGING (USING TOJSON)
   # ----------------------------------------------------------------------
   staging_notification:
     runs-on: ubuntu-latest
-    # FIX: Listing both staging jobs here
     needs: [deploy_frontend, deploy_backend]
     if: always() && github.ref == 'refs/heads/main'
+  
     steps:
       - name: Checkout code (required for this action)
         uses: actions/checkout@v4
 
-      - name: Notify on Staging Status (Slack)
+      # Step 1: Create JSON payload using the toJSON function
+      - name: Prepare Staging Slack Payload
+        id: payload_staging
+        run: |
+          PAYLOAD=$(
+          jq -n \
+            --arg text ":gear: *Staging Deployment Logged!* (Branch: ${{ github.ref_name }})\n\n- Frontend Status: ${{ needs.deploy_frontend.result }}\n- Backend Status: ${{ needs.deploy_backend.result }}\n\nView Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{text: $text}'
+          )
+          echo "payload=$PAYLOAD" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # Step 2: Notify on Staging Status (Slack)
+      - name: Send Staging Notification
         uses: slackapi/slack-github-action@v1.26.0
           
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
         with:
-          payload: |
-              :gear: *Staging Deployment Logged!* (Branch: ${{ github.ref_name }})
-              
-              - Frontend Status: ${{ needs.deploy_frontend.result }}
-              - Backend Status: ${{ needs.deploy_backend.result }}
-              
-              View Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # FIX: Use the 'payload-file-path-parsed' or 'payload' with raw JSON. Here, we use the output from the previous step.
+          payload: ${{ steps.payload_staging.outputs.payload }}
               
   # ----------------------------------------------------------------------
-  # 7. DEPLOYMENT NOTIFICATION FOR PRODUCTION (FIXED INDENTATION & DEPENDENCY)
+  # 7. DEPLOYMENT NOTIFICATION FOR PRODUCTION (USING TOJSON)
   # ----------------------------------------------------------------------
   deployment_notification:
     runs-on: ubuntu-latest
-    # FIX: Listing both production jobs here
     needs: [deploy_frontend_prod, deploy_backend_prod] 
     if: always() && startsWith(github.ref, 'refs/tags/v')
+
     steps:
       - name: Checkout code (required for this action)
         uses: actions/checkout@v4
 
-      - name: Notify on Production Status (Slack)
+      # Step 1: Create JSON payload using the toJSON function
+      - name: Prepare Production Slack Payload
+        id: payload_prod
+        run: |
+          PAYLOAD=$(
+          jq -n \
+            --arg text ":rocket: *Production Deployment Logged!* (Release: ${{ github.ref_name }})\n\n- Frontend Status: ${{ needs.deploy_frontend_prod.result }}\n- Backend Status: ${{ needs.deploy_backend_prod.result }}\n\nView Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{text: $text}'
+          )
+          echo "payload=$PAYLOAD" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # Step 2: Notify on Production Status (Slack)
+      - name: Send Production Notification
         uses: slackapi/slack-github-action@v1.26.0
         
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
         with:
-          payload: |
-              :rocket: *Production Deployment Logged!* (Release: ${{ github.ref_name }})
-              
-              - Frontend Status: ${{ needs.deploy_frontend_prod.result }}
-              - Backend Status: ${{ needs.deploy_backend_prod.result }}
-              
-              View Full Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # FIX: Use the 'payload' input with the output from the previous step.
+          payload: ${{ steps.payload_prod.outputs.payload }}
