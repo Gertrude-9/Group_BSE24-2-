@@ -1,17 +1,17 @@
-# 📝 Team Blog Application
+# Team Blog Application
 
 This repository contains both the **frontend** (React + Vite) and **backend** (Django + Django REST Framework) of the Team Blog application.
 
 ---
 
-## 🚀 Frontend – Team Blog (React + Vite)
+##  Frontend – Team Blog (React + Vite)
 
-### 📌 Overview
+###  Overview
 The frontend is built using **React** and **Vite**, styled with **Tailwind CSS**, and provides a responsive UI for viewing team members, blog posts, and about content.
 
 ---
 
-### ⚙️ Prerequisites
+###  Prerequisites
 To run the frontend locally, ensure you have the following installed:
 
 - Node.js (version 14.x or later)
@@ -20,7 +20,7 @@ To run the frontend locally, ensure you have the following installed:
 
 ---
 
-### 🛠 Installation
+###  Installation
 1.  **Clone the Repository**
     Clone the project from GitHub and navigate to the frontend directory:
     ```bash
@@ -41,7 +41,7 @@ To run the frontend locally, ensure you have the following installed:
 
 ---
 
-### 📂 Project Structure
+###  Project Structure
 team_blog_frontend/
 ├── node_modules/         # Dependency files (auto-generated)
 ├── public/               # Static assets
@@ -73,14 +73,14 @@ team_blog_frontend/
 
 ---
 
-## ⚙️ Backend – Team Blog (Django + Django REST Framework)
+##  Backend – Team Blog (Django + Django REST Framework)
 
-### 📌 Overview
+###  Overview
 This is the backend for the Team Blog application, built using **Django** and **Django REST Framework**. It provides API endpoints for managing team members, blog posts, and about content, with support for media file uploads (e.g., avatars).
 
 ---
 
-### ⚙️ Prerequisites
+### Prerequisites
 To run the backend locally, ensure you have the following installed:
 
 - Python (version 3.8 or later)
@@ -92,7 +92,7 @@ To run the backend locally, ensure you have the following installed:
 
 ---
 
-### 🛠 Installation
+### Installation
 1.  **Clone the Repository**
     Clone the project from GitHub and navigate to the backend directory:
     ```bash
@@ -151,7 +151,7 @@ To run the backend locally, ensure you have the following installed:
 
 ---
 
-### 📂 Project Structure
+###  Project Structure
 team_blog_backend/
 ├── blog_app/             # Django app containing models, views, and URLs
 ├── blog_project/         # Django project settings and configuration
@@ -167,7 +167,7 @@ team_blog_backend/
 
 ---
 
-### 💻 API Endpoints
+### API Endpoints
 The backend provides the following API endpoints:
 
 - `http://127.0.0.1:8000/api/team-members/`: List and manage team members.
