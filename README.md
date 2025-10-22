@@ -73,6 +73,7 @@ team_blog_frontend/
 
 ---
 
+
 ## Backend – Team Blog (Django + Django REST Framework)
 
 ###  Overview
@@ -81,6 +82,7 @@ This is the backend for the Team Blog application, built using **Django** and **
 ---
 
 ###  Prerequisites
+
 To run the backend locally, ensure you have the following installed:
 
 - Python (version 3.8 or later)
@@ -93,6 +95,7 @@ To run the backend locally, ensure you have the following installed:
 ---
 
 ###  Installation
+
 1.  **Clone the Repository**
     Clone the project from GitHub and navigate to the backend directory:
     ```bash
@@ -168,6 +171,7 @@ team_blog_backend/
 ---
 
 ###  API Endpoints
+
 The backend provides the following API endpoints:
 
 - `http://127.0.0.1:8000/api/team-members/`: List and manage team members.
