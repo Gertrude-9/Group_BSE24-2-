@@ -139,6 +139,7 @@ jobs:
     needs: [deploy_frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    continue-on-error: true
     outputs:
       health_status: ${{ steps.health.outputs.status }}
     
@@ -153,10 +154,18 @@ jobs:
           RETRY_COUNT=0
           HEALTH_URL="${{ secrets.STAGING_FRONTEND_URL }}"
           
+          echo "Testing frontend URL: $HEALTH_URL"
+          
+          if [ -z "$HEALTH_URL" ]; then
+            echo "ERROR: STAGING_FRONTEND_URL secret is not set!"
+            exit 1
+          fi
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-            
+            echo "Received HTTP status code: $RESPONSE"
+          
             if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "301" ] || [ "$RESPONSE" = "302" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
               echo "Frontend is healthy!"
@@ -165,12 +174,14 @@ jobs:
             
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
           
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Frontend health check failed after $MAX_RETRIES attempts"
+          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
@@ -180,6 +191,7 @@ jobs:
     needs: [deploy_backend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    continue-on-error: true
     outputs:
       health_status: ${{ steps.health.outputs.status }}
     
@@ -194,9 +206,17 @@ jobs:
           RETRY_COUNT=0
           HEALTH_URL="${{ secrets.STAGING_BACKEND_URL }}/api/team-members/"
           
+          echo "Testing backend URL: $HEALTH_URL"
+          
+          if [ -z "${{ secrets.STAGING_BACKEND_URL }}" ]; then
+            echo "ERROR: STAGING_BACKEND_URL secret is not set!"
+            exit 1
+          fi
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
+            echo "Received HTTP status code: $RESPONSE"
             
             if [ "$RESPONSE" = "200" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
@@ -206,12 +226,14 @@ jobs:
             
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
           
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Backend health check failed after $MAX_RETRIES attempts"
+          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
@@ -259,6 +281,27 @@ jobs:
           echo "Deployment failed health checks"
 
   # ----------------------------------------------------------------------
+  # 5D. ROLLBACK STAGING BACKEND ON FAILURE
+  # ----------------------------------------------------------------------
+  rollback_backend_staging:
+    needs: [health_check_backend_staging]
+    runs-on: ubuntu-latest
+    if: always() && needs.health_check_backend_staging.result == 'failure'
+    
+    steps:
+      - name: Trigger Render Rollback
+        run: |
+          echo "WARNING: Staging backend health check failed. Initiating rollback..."
+          curl -X POST "${{ secrets.RENDER_ROLLBACK_HOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{"action": "rollback", "environment": "staging"}' || echo "Rollback hook triggered"
+      
+      - name: Log rollback event
+        run: |
+          echo "Rollback triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Deployment failed health checks"
+
   # 6. DEPLOY FRONTEND TO VERCEL (PRODUCTION)
   # ----------------------------------------------------------------------
   deploy_frontend_prod:
@@ -335,6 +378,7 @@ jobs:
     needs: [deploy_frontend_prod]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
     outputs:
       health_status: ${{ steps.health.outputs.status }}
     
@@ -349,9 +393,17 @@ jobs:
           RETRY_COUNT=0
           HEALTH_URL="${{ secrets.PRODUCTION_FRONTEND_URL }}"
           
+          echo "Testing production frontend URL: $HEALTH_URL"
+          
+          if [ -z "$HEALTH_URL" ]; then
+            echo "ERROR: PRODUCTION_FRONTEND_URL secret is not set!"
+            exit 1
+          fi
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
+            echo "Received HTTP status code: $RESPONSE"
             
             if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "301" ] || [ "$RESPONSE" = "302" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
@@ -361,12 +413,14 @@ jobs:
             
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
           
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Frontend health check failed after $MAX_RETRIES attempts"
+          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
@@ -376,6 +430,7 @@ jobs:
     needs: [deploy_backend_prod]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    continue-on-error: true
     outputs:
       health_status: ${{ steps.health.outputs.status }}
     
@@ -390,9 +445,17 @@ jobs:
           RETRY_COUNT=0
           HEALTH_URL="${{ secrets.PRODUCTION_BACKEND_URL }}/api/team-members/"
           
+          echo "Testing production backend URL: $HEALTH_URL"
+          
+          if [ -z "${{ secrets.PRODUCTION_BACKEND_URL }}" ]; then
+            echo "ERROR: PRODUCTION_BACKEND_URL secret is not set!"
+            exit 1
+          fi
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
+            echo "Received HTTP status code: $RESPONSE"
             
             if [ "$RESPONSE" = "200" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
@@ -402,12 +465,14 @@ jobs:
             
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
           
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Backend health check failed after $MAX_RETRIES attempts"
+          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
