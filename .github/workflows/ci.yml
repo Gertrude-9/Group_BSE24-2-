@@ -165,7 +165,7 @@ jobs:
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
             echo "Received HTTP status code: $RESPONSE"
-            
+          
             if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "301" ] || [ "$RESPONSE" = "302" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
               echo "Frontend is healthy!"
@@ -281,6 +281,27 @@ jobs:
           echo "Deployment failed health checks"
 
   # ----------------------------------------------------------------------
+  # 5D. ROLLBACK STAGING BACKEND ON FAILURE
+  # ----------------------------------------------------------------------
+  rollback_backend_staging:
+    needs: [health_check_backend_staging]
+    runs-on: ubuntu-latest
+    if: always() && needs.health_check_backend_staging.result == 'failure'
+    
+    steps:
+      - name: Trigger Render Rollback
+        run: |
+          echo "WARNING: Staging backend health check failed. Initiating rollback..."
+          curl -X POST "${{ secrets.RENDER_ROLLBACK_HOOK }}" \
+            -H "Content-Type: application/json" \
+            -d '{"action": "rollback", "environment": "staging"}' || echo "Rollback hook triggered"
+      
+      - name: Log rollback event
+        run: |
+          echo "Rollback triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Deployment failed health checks"
+
   # 6. DEPLOY FRONTEND TO VERCEL (PRODUCTION)
   # ----------------------------------------------------------------------
   deploy_frontend_prod:
