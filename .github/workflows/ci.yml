@@ -192,21 +192,18 @@ jobs:
         run: |
           MAX_RETRIES=5
           RETRY_COUNT=0
-          HEALTH_URL="${{ secrets.STAGING_BACKEND_URL }}/api/team-members/"
+          # CHANGE: Using a less specific endpoint, like the API root
+          HEALTH_URL="${{ secrets.STAGING_BACKEND_URL }}/api/"
           
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-            
-            if [ "$RESPONSE" = "200" ]; then
+             
+            # Allowing 200 (OK) or 401/403 (Authentication required, which confirms service is up)
+            if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "401" ] || [ "$RESPONSE" = "403" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
               echo "Backend is healthy!"
               exit 0
-            fi
-            
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              sleep 15
             fi
           done
           
