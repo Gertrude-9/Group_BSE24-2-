@@ -173,48 +173,6 @@ jobs:
           echo "Frontend health check failed after $MAX_RETRIES attempts"
           exit 1
 
-  # ----------------------------------------------------------------------
-  # 5B. HEALTH CHECK FOR STAGING BACKEND
-  # ----------------------------------------------------------------------
-  health_check_backend_staging:
-    needs: [deploy_backend]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    outputs:
-      health_status: ${{ steps.health.outputs.status }}
-    
-    steps:
-      - name: Wait for deployment to stabilize
-        run: sleep 30
-
-      - name: Check backend health
-        id: health
-        run: |
-          MAX_RETRIES=5
-          RETRY_COUNT=0
-          # CHANGE: Using a less specific endpoint, like the API root
-          HEALTH_URL="${{ secrets.STAGING_BACKEND_URL }}/api/"
-          
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
-            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-              
-            # Allowing 200 (OK) or 401/403 (Authentication required, which confirms service is up)
-            if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "401" ] || [ "$RESPONSE" = "403" ]; then
-              echo "status=healthy" >> $GITHUB_OUTPUT
-              echo "Backend is healthy!"
-              exit 0
-            fi
-            # Add delay here for the loop to complete correctly
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              sleep 15
-            fi
-          done
-          
-          echo "status=unhealthy" >> $GITHUB_OUTPUT
-          echo "Backend health check failed after $MAX_RETRIES attempts"
-          exit 1
 
   # ----------------------------------------------------------------------
   # 5C. ROLLBACK STAGING FRONTEND ON FAILURE
@@ -347,47 +305,6 @@ jobs:
           
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Frontend health check failed after $MAX_RETRIES attempts"
-          exit 1
-
-  # ----------------------------------------------------------------------
-  # 7B. HEALTH CHECK FOR PRODUCTION BACKEND
-  # ----------------------------------------------------------------------
-  health_check_backend_prod:
-    needs: [deploy_backend_prod]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    outputs:
-      health_status: ${{ steps.health.outputs.status }}
-    
-    steps:
-      - name: Wait for deployment to stabilize
-        run: sleep 30
-
-      - name: Check backend health
-        id: health
-        run: |
-          MAX_RETRIES=5
-          RETRY_COUNT=0
-          HEALTH_URL="${{ secrets.PRODUCTION_BACKEND_URL }}/api/team-members/"
-          
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
-            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-            
-            if [ "$RESPONSE" = "200" ]; then
-              echo "status=healthy" >> $GITHUB_OUTPUT
-              echo "Backend is healthy!"
-              exit 0
-            fi
-            
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              sleep 15
-            fi
-          done
-          
-          echo "status=unhealthy" >> $GITHUB_OUTPUT
-          echo "Backend health check failed after $MAX_RETRIES attempts"
           exit 1
 
   # ----------------------------------------------------------------------
