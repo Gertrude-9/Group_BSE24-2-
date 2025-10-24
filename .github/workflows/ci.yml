@@ -173,7 +173,6 @@ jobs:
           echo "Frontend health check failed after $MAX_RETRIES attempts"
           exit 1
 
-
   # ----------------------------------------------------------------------
   # 5C. ROLLBACK STAGING FRONTEND ON FAILURE
   # ----------------------------------------------------------------------
