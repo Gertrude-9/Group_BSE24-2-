@@ -12,12 +12,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ---------------------------------------------------------------------
+  # ----------------------------------------------------------------------
   # 1. BUILD JOB (CI Quality Gate)
-  # ---------------------------------------------------------------------
+  # ----------------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
       # Step 1: Checkout repository
       - name: Checkout code
@@ -40,7 +40,7 @@ jobs:
       - name: Build frontend (Generates 'dist')
         run: npm run build
         working-directory: ./team_blog_frontend
-
+        
       # CRITICAL STEP: Upload the compiled 'dist' folder for deployment
       - name: Archive frontend build artifacts
         uses: actions/upload-artifact@v4
@@ -61,20 +61,20 @@ jobs:
       - name: Run backend tests and linting
         run: flake8 . && python manage.py test
         working-directory: ./team_blog_backend
-
+        
   # ----------------------------------------------------------------------
   # 2. DEPLOY FRONTEND TO VERCEL (STAGING)
   # ----------------------------------------------------------------------
   deploy_frontend:
     needs: [build]
     runs-on: ubuntu-latest
-    environment: staging_vercel
+    environment: staging_vercel 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
       deployment_id: ${{ steps.deploy.outputs.deployment_id }}
       commit_sha: ${{ github.sha }}
       timestamp: ${{ steps.timestamp.outputs.time }}
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -84,7 +84,7 @@ jobs:
         with:
           name: frontend-dist
           path: ./team_blog_frontend/dist
-
+        
       - name: Install Vercel CLI
         run: npm install -g vercel
 
@@ -97,12 +97,12 @@ jobs:
         run: |
           RESPONSE=$(curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }} -w "\n%{http_code}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT  
+          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT
           if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 201 ]; then
             echo "Deployment failed with HTTP code: $HTTP_CODE"
             exit 1
           fi
-
+          
   # ----------------------------------------------------------------------
   # 3. DEPLOY BACKEND TO RENDER (STAGING)
   # ----------------------------------------------------------------------
@@ -115,34 +115,33 @@ jobs:
       deployment_id: ${{ steps.deploy.outputs.deployment_id }}
       commit_sha: ${{ github.sha }}
       timestamp: ${{ steps.timestamp.outputs.time }}
-
+    
     steps:
       - name: Get timestamp
         id: timestamp
         run: echo "time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
 
-      - name: Trigger Render Backend Staging Deployment       
+      - name: Trigger Render Backend Staging Deployment
         id: deploy
         run: |
           RESPONSE=$(curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }} -w "\n%{http_code}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT  
+          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT
           if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 201 ]; then
             echo "Deployment failed with HTTP code: $HTTP_CODE"
             exit 1
           fi
 
   # ----------------------------------------------------------------------
-  # 4A. HEALTH CHECK FOR STAGING FRONTEND
+  # 5A. HEALTH CHECK FOR STAGING FRONTEND
   # ----------------------------------------------------------------------
   health_check_frontend_staging:
     needs: [deploy_frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    continue-on-error: true
     outputs:
-      health_status: ${{ steps.health.outputs.status }}       
-
+      health_status: ${{ steps.health.outputs.status }}
+    
     steps:
       - name: Wait for deployment to stabilize
         run: sleep 30
@@ -152,51 +151,38 @@ jobs:
         run: |
           MAX_RETRIES=5
           RETRY_COUNT=0
-
-          HEALTH_URL="${{ secrets.STAGING_FRONTEND_URL }}"    
-
-          echo "Testing frontend URL: $HEALTH_URL"
-
-          if [ -z "$HEALTH_URL" ]; then
-            echo "ERROR: STAGING_FRONTEND_URL secret is not set!"
-            exit 1
-          fi
-
+          HEALTH_URL="${{ secrets.STAGING_FRONTEND_URL }}"
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-            echo "Received HTTP status code: $RESPONSE"
-
+            
             if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "301" ] || [ "$RESPONSE" = "302" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
               echo "Frontend is healthy!"
               exit 0
             fi
-
+            
             RETRY_COUNT=$((RETRY_COUNT + 1))
-
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
-
+          
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Frontend health check failed after $MAX_RETRIES attempts"
-          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
-  # 4B. HEALTH CHECK FOR STAGING BACKEND
+  # 5B. HEALTH CHECK FOR STAGING BACKEND
   # ----------------------------------------------------------------------
   health_check_backend_staging:
     needs: [deploy_backend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    continue-on-error: true
     outputs:
-      health_status: ${{ steps.health.outputs.status }}       
-
+      health_status: ${{ steps.health.outputs.status }}
+    
     steps:
       - name: Wait for deployment to stabilize
         run: sleep 30
@@ -207,46 +193,35 @@ jobs:
           MAX_RETRIES=5
           RETRY_COUNT=0
           HEALTH_URL="${{ secrets.STAGING_BACKEND_URL }}/api/team-members/"
-
-          echo "Testing backend URL: $HEALTH_URL"
-
-          if [ -z "${{ secrets.STAGING_BACKEND_URL }}" ]; then
-            echo "ERROR: STAGING_BACKEND_URL secret is not set!"
-            exit 1
-          fi
-
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-            echo "Received HTTP status code: $RESPONSE"
-
+            
             if [ "$RESPONSE" = "200" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
               echo "Backend is healthy!"
               exit 0
             fi
-
+            
             RETRY_COUNT=$((RETRY_COUNT + 1))
-
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
-
+          
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Backend health check failed after $MAX_RETRIES attempts"
-          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
-  # 4C. ROLLBACK STAGING FRONTEND ON FAILURE
+  # 5C. ROLLBACK STAGING FRONTEND ON FAILURE
   # ----------------------------------------------------------------------
   rollback_frontend_staging:
     needs: [health_check_frontend_staging]
     runs-on: ubuntu-latest
     if: always() && needs.health_check_frontend_staging.result == 'failure'
-
+    
     steps:
       - name: Trigger Vercel Rollback
         run: |
@@ -254,7 +229,7 @@ jobs:
           curl -X POST "${{ secrets.VERCEL_ROLLBACK_HOOK }}" \
             -H "Content-Type: application/json" \
             -d '{"action": "rollback", "environment": "staging"}' || echo "Rollback hook triggered"
-
+      
       - name: Log rollback event
         run: |
           echo "Rollback triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -262,13 +237,13 @@ jobs:
           echo "Deployment failed health checks"
 
   # ----------------------------------------------------------------------
-  # 4D. ROLLBACK STAGING BACKEND ON FAILURE
+  # 5D. ROLLBACK STAGING BACKEND ON FAILURE
   # ----------------------------------------------------------------------
   rollback_backend_staging:
     needs: [health_check_backend_staging]
     runs-on: ubuntu-latest
     if: always() && needs.health_check_backend_staging.result == 'failure'
-
+    
     steps:
       - name: Trigger Render Rollback
         run: |
@@ -276,7 +251,7 @@ jobs:
           curl -X POST "${{ secrets.RENDER_ROLLBACK_HOOK }}" \
             -H "Content-Type: application/json" \
             -d '{"action": "rollback", "environment": "staging"}' || echo "Rollback hook triggered"
-
+      
       - name: Log rollback event
         run: |
           echo "Rollback triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -284,18 +259,18 @@ jobs:
           echo "Deployment failed health checks"
 
   # ----------------------------------------------------------------------
-  # 5. DEPLOY FRONTEND TO VERCEL (PRODUCTION)
+  # 6. DEPLOY FRONTEND TO VERCEL (PRODUCTION)
   # ----------------------------------------------------------------------
   deploy_frontend_prod:
     needs: [build]
     runs-on: ubuntu-latest
-    environment: production_vercel
+    environment: production_vercel 
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     outputs:
       deployment_id: ${{ steps.deploy.outputs.deployment_id }}
       commit_sha: ${{ github.sha }}
       timestamp: ${{ steps.timestamp.outputs.time }}
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -305,7 +280,7 @@ jobs:
         with:
           name: frontend-dist
           path: ./team_blog_frontend/dist
-
+        
       - name: Install Vercel CLI
         run: npm install -g vercel
 
@@ -313,19 +288,19 @@ jobs:
         id: timestamp
         run: echo "time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
 
-      - name: Trigger Vercel Deployment via Hook (Production) 
+      - name: Trigger Vercel Deployment via Hook (Production)
         id: deploy
         run: |
           RESPONSE=$(curl -X POST ${{ secrets.VERCEL_PROD_HOOK }} -w "\n%{http_code}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT  
+          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT
           if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 201 ]; then
             echo "Deployment failed with HTTP code: $HTTP_CODE"
             exit 1
           fi
 
   # ----------------------------------------------------------------------
-  # 6. DEPLOY BACKEND TO RENDER (PRODUCTION)
+  # 5. DEPLOY BACKEND TO RENDER (PRODUCTION)
   # ----------------------------------------------------------------------
   deploy_backend_prod:
     needs: [build]
@@ -336,18 +311,18 @@ jobs:
       deployment_id: ${{ steps.deploy.outputs.deployment_id }}
       commit_sha: ${{ github.sha }}
       timestamp: ${{ steps.timestamp.outputs.time }}
-
+    
     steps:
       - name: Get timestamp
         id: timestamp
         run: echo "time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
 
-      - name: Trigger Render Backend Production Deployment    
+      - name: Trigger Render Backend Production Deployment
         id: deploy
         run: |
           RESPONSE=$(curl -X POST ${{ secrets.RENDER_PROD_HOOK }} -w "\n%{http_code}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT  
+          echo "deployment_id=$(date +%s)" >> $GITHUB_OUTPUT
           if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 201 ]; then
             echo "Deployment failed with HTTP code: $HTTP_CODE"
             exit 1
@@ -360,10 +335,9 @@ jobs:
     needs: [deploy_frontend_prod]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    continue-on-error: true
     outputs:
-      health_status: ${{ steps.health.outputs.status }}       
-
+      health_status: ${{ steps.health.outputs.status }}
+    
     steps:
       - name: Wait for deployment to stabilize
         run: sleep 30
@@ -373,38 +347,26 @@ jobs:
         run: |
           MAX_RETRIES=5
           RETRY_COUNT=0
-
-          HEALTH_URL="${{ secrets.PRODUCTION_FRONTEND_URL }}" 
-
-          echo "Testing production frontend URL: $HEALTH_URL" 
-
-          if [ -z "$HEALTH_URL" ]; then
-            echo "ERROR: PRODUCTION_FRONTEND_URL secret is not set!"
-            exit 1
-          fi
-
+          HEALTH_URL="${{ secrets.PRODUCTION_FRONTEND_URL }}"
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-            echo "Received HTTP status code: $RESPONSE"
-
+            
             if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "301" ] || [ "$RESPONSE" = "302" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
               echo "Frontend is healthy!"
               exit 0
             fi
-
+            
             RETRY_COUNT=$((RETRY_COUNT + 1))
-
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
-
+          
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Frontend health check failed after $MAX_RETRIES attempts"
-          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
@@ -414,10 +376,9 @@ jobs:
     needs: [deploy_backend_prod]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    continue-on-error: true
     outputs:
-      health_status: ${{ steps.health.outputs.status }}       
-
+      health_status: ${{ steps.health.outputs.status }}
+    
     steps:
       - name: Wait for deployment to stabilize
         run: sleep 30
@@ -428,36 +389,25 @@ jobs:
           MAX_RETRIES=5
           RETRY_COUNT=0
           HEALTH_URL="${{ secrets.PRODUCTION_BACKEND_URL }}/api/team-members/"
-
-          echo "Testing production backend URL: $HEALTH_URL"
-
-          if [ -z "${{ secrets.PRODUCTION_BACKEND_URL }}" ]; then
-            echo "ERROR: PRODUCTION_BACKEND_URL secret is not set!"
-            exit 1
-          fi
-
+          
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Health check attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL" || echo "000")
-            echo "Received HTTP status code: $RESPONSE"
-
+            
             if [ "$RESPONSE" = "200" ]; then
               echo "status=healthy" >> $GITHUB_OUTPUT
               echo "Backend is healthy!"
               exit 0
             fi
-
+            
             RETRY_COUNT=$((RETRY_COUNT + 1))
-
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "Waiting 15 seconds before next attempt..."
               sleep 15
             fi
           done
-
+          
           echo "status=unhealthy" >> $GITHUB_OUTPUT
           echo "Backend health check failed after $MAX_RETRIES attempts"
-          echo "Last HTTP status code: $RESPONSE"
           exit 1
 
   # ----------------------------------------------------------------------
@@ -467,7 +417,7 @@ jobs:
     needs: [health_check_frontend_prod]
     runs-on: ubuntu-latest
     if: always() && needs.health_check_frontend_prod.result == 'failure'
-
+    
     steps:
       - name: Trigger Vercel Rollback
         run: |
@@ -475,7 +425,7 @@ jobs:
           curl -X POST "${{ secrets.VERCEL_PROD_ROLLBACK_HOOK }}" \
             -H "Content-Type: application/json" \
             -d '{"action": "rollback", "environment": "production"}' || echo "Rollback hook triggered"
-
+      
       - name: Log rollback event
         run: |
           echo "PRODUCTION ROLLBACK triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -490,7 +440,7 @@ jobs:
     needs: [health_check_backend_prod]
     runs-on: ubuntu-latest
     if: always() && needs.health_check_backend_prod.result == 'failure'
-
+    
     steps:
       - name: Trigger Render Rollback
         run: |
@@ -498,7 +448,7 @@ jobs:
           curl -X POST "${{ secrets.RENDER_PROD_ROLLBACK_HOOK }}" \
             -H "Content-Type: application/json" \
             -d '{"action": "rollback", "environment": "production"}' || echo "Rollback hook triggered"
-
+      
       - name: Log rollback event
         run: |
           echo "PRODUCTION ROLLBACK triggered at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -507,41 +457,41 @@ jobs:
           echo "Deployment failed health checks"
 
   # ----------------------------------------------------------------------
-  # 8. DEPLOYMENT NOTIFICATION FOR STAGING (USING TOJSON)     
+  # 8. DEPLOYMENT NOTIFICATION FOR STAGING (USING TOJSON)
   # ----------------------------------------------------------------------
   staging_notification:
     runs-on: ubuntu-latest
     needs: [deploy_frontend, deploy_backend, health_check_frontend_staging, health_check_backend_staging, rollback_frontend_staging, rollback_backend_staging]
     if: always() && github.ref == 'refs/heads/main'
-
+  
     steps:
-      - name: Checkout code (required for this action)        
+      - name: Checkout code (required for this action)
         uses: actions/checkout@v4
 
-      # Step 1: Create JSON payload using the toJSON function 
+      # Step 1: Create JSON payload using the toJSON function
       - name: Prepare Staging Slack Payload
         id: payload_staging
         run: |
           # Determine overall status
           FRONTEND_STATUS="${{ needs.deploy_frontend.result }}"
-          BACKEND_STATUS="${{ needs.deploy_backend.result }}" 
+          BACKEND_STATUS="${{ needs.deploy_backend.result }}"
           FRONTEND_HEALTH="${{ needs.health_check_frontend_staging.result }}"
           BACKEND_HEALTH="${{ needs.health_check_backend_staging.result }}"
           FRONTEND_ROLLBACK="${{ needs.rollback_frontend_staging.result }}"
           BACKEND_ROLLBACK="${{ needs.rollback_backend_staging.result }}"
-
+          
           # Build status message
           STATUS_MSG=""
           ICON="[SUCCESS]"
-
+          
           if [ "$FRONTEND_ROLLBACK" = "success" ] || [ "$BACKEND_ROLLBACK" = "success" ]; then
             ICON="[WARNING]"
-            STATUS_MSG="WARNING: *ROLLBACK EXECUTED*\n\n"     
+            STATUS_MSG="WARNING: *ROLLBACK EXECUTED*\n\n"
           elif [ "$FRONTEND_HEALTH" = "failure" ] || [ "$BACKEND_HEALTH" = "failure" ]; then
             ICON="[FAILED]"
-            STATUS_MSG="FAILED: *HEALTH CHECK FAILED*\n\n"    
+            STATUS_MSG="FAILED: *HEALTH CHECK FAILED*\n\n"
           fi
-
+          
           PAYLOAD=$(
             jq -n \
               --arg text "${ICON} *Staging Deployment Report* (Branch: ${{ github.ref_name }})\n\n${STATUS_MSG}- Frontend Deploy: ${FRONTEND_STATUS}\n- Frontend Health: ${FRONTEND_HEALTH}\n- Frontend Rollback: ${FRONTEND_ROLLBACK}\n\n- Backend Deploy: ${BACKEND_STATUS}\n- Backend Health: ${BACKEND_HEALTH}\n- Backend Rollback: ${BACKEND_ROLLBACK}\n\nCommit: ${{ github.sha }}\nView Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
@@ -553,24 +503,25 @@ jobs:
       # Step 2: Notify on Staging Status (Slack)
       - name: Send Staging Notification
         uses: slackapi/slack-github-action@v1.26.0
+          
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
         with:
           payload: ${{ steps.payload_staging.outputs.payload }}
-
+              
   # ----------------------------------------------------------------------
-  # 9. DEPLOYMENT NOTIFICATION FOR PRODUCTION (USING TOJSON)  
+  # 9. DEPLOYMENT NOTIFICATION FOR PRODUCTION (USING TOJSON)
   # ----------------------------------------------------------------------
   deployment_notification:
     runs-on: ubuntu-latest
-    needs: [deploy_frontend_prod, deploy_backend_prod, health_check_frontend_prod, health_check_backend_prod, rollback_frontend_prod, rollback_backend_prod]
-    if: always() && startsWith(github.ref, 'refs/tags/v')     
+    needs: [deploy_frontend_prod, deploy_backend_prod, health_check_frontend_prod, health_check_backend_prod, rollback_frontend_prod, rollback_backend_prod] 
+    if: always() && startsWith(github.ref, 'refs/tags/v')
 
     steps:
-      - name: Checkout code (required for this action)        
+      - name: Checkout code (required for this action)
         uses: actions/checkout@v4
 
-      # Step 1: Create JSON payload using the toJSON function 
+      # Step 1: Create JSON payload using the toJSON function
       - name: Prepare Production Slack Payload
         id: payload_prod
         run: |
@@ -581,11 +532,11 @@ jobs:
           BACKEND_HEALTH="${{ needs.health_check_backend_prod.result }}"
           FRONTEND_ROLLBACK="${{ needs.rollback_frontend_prod.result }}"
           BACKEND_ROLLBACK="${{ needs.rollback_backend_prod.result }}"
-
+          
           # Build status message
           STATUS_MSG=""
           ICON="[PRODUCTION]"
-
+          
           if [ "$FRONTEND_ROLLBACK" = "success" ] || [ "$BACKEND_ROLLBACK" = "success" ]; then
             ICON="[CRITICAL]"
             STATUS_MSG="CRITICAL: *PRODUCTION ROLLBACK EXECUTED*\n\n"
@@ -593,7 +544,7 @@ jobs:
             ICON="[FAILED]"
             STATUS_MSG="FAILED: *PRODUCTION HEALTH CHECK FAILED*\n\n"
           fi
-
+          
           PAYLOAD=$(
             jq -n \
               --arg text "${ICON} *Production Deployment Report* (Release: ${{ github.ref_name }})\n\n${STATUS_MSG}- Frontend Deploy: ${FRONTEND_STATUS}\n- Frontend Health: ${FRONTEND_HEALTH}\n- Frontend Rollback: ${FRONTEND_ROLLBACK}\n\n- Backend Deploy: ${BACKEND_STATUS}\n- Backend Health: ${BACKEND_HEALTH}\n- Backend Rollback: ${BACKEND_ROLLBACK}\n\nCommit: ${{ github.sha }}\nView Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
@@ -605,6 +556,7 @@ jobs:
       # Step 2: Notify on Production Status (Slack)
       - name: Send Production Notification
         uses: slackapi/slack-github-action@v1.26.0
+        
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
         with:
